@@ -395,8 +395,6 @@ const App = () => {
                 <p className="regards-text">Best Regards</p>
                 <p className="company-sig-text">SA'DA Water</p>
                 <div className="signature-placeholder">
-                  <div className="digital-signLine"></div>
-                  <span className="signature-label">[Signature]</span>
                   <img src="/seal.png" alt="Seal" className="seal-img" />
                 </div>
               </div>

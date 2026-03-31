@@ -198,31 +198,19 @@ body {
 }
 
 .signature-placeholder {
-  margin-top: 15px;
+  margin-top: 5px;
   position: relative;
-  min-height: 100px; /* Leave space for the seal where you pointed */
+  min-height: 80px; 
 }
 
-.digital-signLine {
-  width: 140px;
-  border-bottom: 2px solid #ccc;
-  margin-bottom: 5px;
-}
-
-.signature-label {
-  font-style: italic;
-  color: #888;
-  font-size: 12px;
-  display: block;
-}
 
 .seal-img {
-  width: 130px;
+  width: 150px; /* Slightly larger to be the main element */
   position: absolute;
-  top: -20px; /* Offset to feel "stamped" on the signature line area */
-  left: 30px;
-  opacity: 0.85;
-  mix-blend-mode: multiply; /* Blends with white background */
+  top: 0;
+  left: 0;
+  opacity: 0.95;
+  mix-blend-mode: multiply;
   pointer-events: none;
   z-index: 5;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
