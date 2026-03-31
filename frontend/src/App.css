@@ -14,9 +14,65 @@ body {
 }
 
 .app-container {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
+  max-width: 950px;
+  margin: 0 auto;
+  padding: 0 20px 40px 20px;
+}
+
+.main-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #1e3a5f 0%, #3a5b88 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.025em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-controls {
+  display: flex;
+  gap: 12px;
 }
 
 .upload-section {
@@ -205,7 +261,7 @@ body {
 
 
 .seal-img {
-  width: 150px; /* Slightly larger to be the main element */
+  width: 330px; /* Slightly larger to be the main element */
   position: absolute;
   top: 0;
   left: 0;
@@ -268,7 +324,7 @@ body {
     size: A4;
     margin: 0;
   }
-  .controls, .upload-section {
+  .main-header, .controls, .upload-section {
     display: none !important;
   }
   .editable-field {

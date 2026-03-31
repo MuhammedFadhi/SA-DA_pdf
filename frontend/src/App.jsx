@@ -184,8 +184,26 @@ const App = () => {
   );
 
   return (
-    <div className="app-container">
-      {!reportData ? (
+    <>
+      <header className="main-header">
+        <div className="header-inner">
+          <div className="header-left">
+            <img src="/effedo_logo.png" alt="Effedo Logo" className="header-logo" />
+          </div>
+          <div className="header-right">
+            {reportData && (
+              <div className="header-controls">
+                <button className="btn btn-secondary" onClick={() => setReportData(null)}>Upload New</button>
+                <button className="btn btn-primary" onClick={() => window.print()}>Print Report</button>
+              </div>
+            )}
+            <h1 className="header-title">PDF-Reporting Tool</h1>
+          </div>
+        </div>
+      </header>
+
+      <div className="app-container">
+        {!reportData ? (
         <div className="upload-section" onClick={() => fileInputRef.current.click()}>
           <input 
             type="file" 
@@ -201,10 +219,6 @@ const App = () => {
         </div>
       ) : (
         <div className="report-container">
-          <div className="controls">
-            <button className="btn btn-secondary" onClick={() => setReportData(null)}>Upload New</button>
-            <button className="btn btn-primary" onClick={() => window.print()}>Print Report</button>
-          </div>
 
           <div className="report-view">
             <img src="/header.png" alt="Header" className="header-img" />
@@ -405,7 +419,8 @@ const App = () => {
         </div>
       )}
     </div>
-  );
+  </>
+);
 };
 
 export default App;
