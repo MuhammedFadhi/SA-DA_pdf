@@ -263,8 +263,8 @@ body {
 .seal-img {
   width: 220px;
   position: absolute;
-  top: 5px;
-  left: 0;
+  top: -35px;
+  left: -20px;
   opacity: 0.95;
   mix-blend-mode: multiply;
   pointer-events: none;
