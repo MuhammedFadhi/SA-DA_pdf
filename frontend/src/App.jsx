@@ -115,6 +115,7 @@ const App = () => {
       location: findTextAfterLabel("Location / Site") || findTextAfterLabel("الموقع") || "N/A",
       contactPerson: findTextAfterLabel("Contact Person") || "Sir",
       emailTel: findTextAfterLabel("E-MAIL / TEL") || "**",
+      comment: "Based on the result, we would regard that the water sample meet the satisfactory Quality both chemically and microbiologically for domestic water and it is safe for drinking",
       headers: {
         s: "S",
         parameter: "Parameters / Testing اسم التحليل /الفحوصات",
@@ -403,6 +404,17 @@ const App = () => {
                 ))}
               </tbody>
             </table>
+
+            <div className="comment-section" style={{ textAlign: 'left', fontSize: '11px', padding: '5px 10px', marginTop: '5px', borderBottom: '1px solid black' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>Comment - ملاحظة</div>
+              <div style={{ color: '#0056b3' }}>
+                <EditableValue 
+                  value={reportData.comment} 
+                  onChange={(val) => handleEditMetadata('comment', val)}
+                  className="comment-value"
+                />
+              </div>
+            </div>
 
             <div className="signature-area">
               <div className="signature-left">
