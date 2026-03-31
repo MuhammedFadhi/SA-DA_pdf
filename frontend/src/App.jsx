@@ -214,7 +214,7 @@ const App = () => {
           />
           <div style={{ fontSize: '48px', color: '#1e3a5f', marginBottom: '20px' }}>📄</div>
           <h2>Upload Laboratory PDF</h2>
-          <p>Drag and drop your Gulf Star Lab PDF here to convert and edit</p>
+          <p>Drag and drop your PDF here to convert and edit</p>
           {loading && <p>Processing... Please wait.</p>}
         </div>
       ) : (
