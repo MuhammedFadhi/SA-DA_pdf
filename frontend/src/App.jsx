@@ -147,8 +147,8 @@ const App = () => {
         s: marker.text,
         parameter: r.filter(i => i.x > 65 && i.x < 250).map(i => i.text).join(" "),
         method: r.filter(i => i.x >= 250 && i.x < 330).map(i => i.text).join(" "),
-        result: r.filter(i => i.x >= 330 && i.x < 425).map(i => i.text).join(" "),
-        unit: r.filter(i => i.x >= 425 && i.x < 475).map(i => i.text).join(" "),
+        result: r.filter(i => i.x >= 330 && i.x < 405).map(i => i.text).join(" "),
+        unit: r.filter(i => i.x >= 405 && i.x < 475).map(i => i.text).join(" "),
         std: r.filter(i => i.x >= 475).map(i => i.text).join(" ")
       };
     });
