@@ -13,10 +13,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
+  const processFile = async (file) => {
     console.log("File selected:", file.name);
     setLoading(true);
     try {
@@ -48,6 +45,27 @@ const App = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file && file.type === "application/pdf") {
+      processFile(file);
+    } else if (file) {
+      alert("Please upload a PDF file.");
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
   };
 
   const extractData = (items) => {
@@ -205,7 +223,12 @@ const App = () => {
 
       <div className="app-container">
         {!reportData ? (
-        <div className="upload-section" onClick={() => fileInputRef.current.click()}>
+        <div 
+          className="upload-section" 
+          onClick={() => fileInputRef.current.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
           <input 
             type="file" 
             ref={fileInputRef} 
