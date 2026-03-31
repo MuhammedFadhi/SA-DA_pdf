@@ -1,0 +1,312 @@
+:root {
+  --primary-blue: #1e3a5f;
+  --secondary-blue: #3a5b88;
+  --light-grey: #f4f7f9;
+  --border-color: #d1d9e6;
+  --text-dark: #333;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #e5e7eb;
+  font-family: 'Inter', sans-serif;
+}
+
+.app-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.upload-section {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  border: 2px dashed var(--border-color);
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-section:hover {
+  border-color: var(--primary-blue);
+  background-color: var(--light-grey);
+}
+
+.report-view {
+  background: white;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  padding: 30px;
+  min-height: 1050px;
+  max-height: 1120px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-img {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.footer-img {
+  width: 100%;
+  margin-top: auto;
+}
+
+.report-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid var(--primary-blue);
+  padding-bottom: 0px;
+  margin-bottom: 5px;
+  margin-top: 10px;
+}
+
+.barcode-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.barcode {
+  font-family: 'Libre Barcode 39', cursive;
+  font-size: 42px;
+  line-height: 0.8;
+  margin-bottom: -5px;
+}
+
+.report-title {
+  color: var(--primary-blue);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.job-id-label {
+  font-size: 12px;
+  color: #333;
+  margin-top: 2px;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
+  margin-bottom: 10px;
+}
+
+.metadata-item {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 10px;
+  min-height: 28px;
+  align-items: stretch;
+}
+
+.metadata-label {
+  background-color: var(--light-grey);
+  padding: 4px 10px;
+  font-weight: 600;
+  color: #1e3a5f;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.metadata-value {
+  padding: 4px 10px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-weight: 500;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  margin-bottom: 40px;
+}
+
+.results-table th {
+  background-color: var(--light-grey);
+  color: var(--primary-blue);
+  border: 1px solid var(--border-color);
+  padding: 4px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.results-table th .editable-field {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.results-table td {
+  border: 1px solid var(--border-color);
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.param-name {
+  text-align: left !important;
+}
+
+.signature-area {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0 30px 0;
+  position: relative;
+  min-height: 120px;
+}
+
+.signature-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.signature-right {
+  display: flex;
+  align-items: center;
+}
+
+.regards-text {
+  font-weight: 700;
+  margin: 0;
+  font-size: 14px;
+}
+
+.company-sig-text {
+  font-weight: 700;
+  color: var(--primary-blue);
+  margin: 0;
+  font-size: 14px;
+}
+
+.signature-placeholder {
+  margin-top: 15px;
+  position: relative;
+  min-height: 100px; /* Leave space for the seal where you pointed */
+}
+
+.digital-signLine {
+  width: 140px;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 5px;
+}
+
+.signature-label {
+  font-style: italic;
+  color: #888;
+  font-size: 12px;
+  display: block;
+}
+
+.seal-img {
+  width: 130px;
+  position: absolute;
+  top: -20px; /* Offset to feel "stamped" on the signature line area */
+  left: 30px;
+  opacity: 0.85;
+  mix-blend-mode: multiply; /* Blends with white background */
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.editable-field {
+  min-height: 1.2em;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: text;
+  outline: none;
+}
+
+.editable-field:hover {
+  background-color: rgba(30, 58, 95, 0.05);
+  border-color: var(--border-color);
+}
+
+.editable-field:focus {
+  background-color: white;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.1);
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  .controls, .upload-section {
+    display: none !important;
+  }
+  .editable-field {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .app-container {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .report-view {
+    box-shadow: none;
+    margin: 0;
+    padding: 30px; /* Preserve screen padding */
+    width: 210mm;
+    height: 297mm;
+    min-height: auto;
+    max-height: none;
+    overflow: hidden;
+    zoom: 0.95; /* Slight scaling to fit print margins better */
+  }
+  .barcode {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
