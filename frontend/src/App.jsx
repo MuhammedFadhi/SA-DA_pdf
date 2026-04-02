@@ -203,11 +203,11 @@ const App = () => {
   );
 
   return (
-    <>
+    <div className="page-wrapper">
       <header className="main-header">
         <div className="header-inner">
           <div className="header-left">
-            <img src="/effedo_logo.png" alt="Effedo Logo" className="header-logo" />
+            <img src="/black%20logo%20400px200.png" alt="Company Logo" className="header-logo" />
           </div>
           <div className="header-right">
             {reportData && (
@@ -453,9 +453,14 @@ const App = () => {
           </div>
         </div>
       )}
+      </div>
+      
+      <footer className="app-footer">
+        <span>Powered by</span>
+        <img src="/effedo_logo.png" alt="Effedo Logo" className="footer-effedo-logo" />
+      </footer>
     </div>
-  </>
-);
+  );
 };
 
 export default App;
