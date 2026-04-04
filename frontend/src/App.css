@@ -18,6 +18,10 @@ body {
   color: var(--text-dark);
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 .page-wrapper {
   min-height: 100vh;
   display: flex;
