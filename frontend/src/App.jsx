@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import './App.css';
 
 // Set worker path using Vite-compatible approach
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
+  'pdfjs-dist/legacy/build/pdf.worker.mjs',
   import.meta.url
 ).toString();
 
