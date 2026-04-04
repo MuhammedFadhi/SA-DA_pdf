@@ -220,7 +220,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 10px;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
 }
 
 .results-table th {
@@ -254,9 +254,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0 30px 0;
+  padding: 5px 0 10px 0;
   position: relative;
-  min-height: 120px;
+  min-height: 100px;
 }
 
 .signature-left {
@@ -486,13 +486,24 @@ body {
   .report-view {
     box-shadow: none;
     margin: 0;
-    padding: 30px; /* Preserve screen padding */
+    padding: 10mm 15mm 5mm 15mm;
     width: 210mm;
-    height: 297mm;
-    min-height: auto;
-    max-height: none;
-    overflow: hidden;
-    zoom: 0.95; /* Slight scaling to fit print margins better */
+    min-height: 297mm;
+    height: auto;
+    max-height: none !important;
+    overflow: visible;
+  }
+  .results-table {
+    display: table !important;
+    white-space: normal !important;
+  }
+  .footer-img {
+    margin-top: auto;
+    width: 100%;
+    page-break-inside: avoid;
+  }
+  .signature-area {
+    page-break-inside: avoid;
   }
   .barcode {
     -webkit-print-color-adjust: exact;
