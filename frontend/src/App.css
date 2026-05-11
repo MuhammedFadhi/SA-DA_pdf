@@ -123,9 +123,9 @@ body {
 .report-view {
   background: white;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  padding: 30px;
+  padding: 20px;
   min-height: 1050px;
-  max-height: 1120px;
+  max-height: 1150px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -133,7 +133,7 @@ body {
 
 .header-img {
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .footer-img {
@@ -148,7 +148,7 @@ body {
   border-bottom: 2px solid var(--primary-blue);
   padding-bottom: 0px;
   margin-bottom: 5px;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 .barcode-container {
@@ -183,7 +183,7 @@ body {
   grid-template-columns: 1fr 1fr;
   border-top: 1px solid var(--border-color);
   border-left: 1px solid var(--border-color);
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .metadata-item {
@@ -192,7 +192,7 @@ body {
   border-right: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
   font-size: 10px;
-  min-height: 28px;
+  min-height: 24px;
   align-items: stretch;
 }
 
@@ -220,14 +220,14 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .results-table th {
   background-color: var(--light-grey);
   color: var(--primary-blue);
   border: 1px solid var(--border-color);
-  padding: 4px;
+  padding: 3px;
   text-align: center;
   font-weight: 600;
 }
@@ -241,7 +241,7 @@ body {
 
 .results-table td {
   border: 1px solid var(--border-color);
-  padding: 4px 6px;
+  padding: 3px 6px;
   text-align: center;
 }
 
@@ -256,7 +256,7 @@ body {
   align-items: center;
   padding: 5px 0 10px 0;
   position: relative;
-  min-height: 100px;
+  min-height: 80px;
 }
 
 .signature-left {
@@ -486,7 +486,7 @@ body {
   .report-view {
     box-shadow: none;
     margin: 0;
-    padding: 10mm 15mm 5mm 15mm;
+    padding: 5mm 15mm 5mm 15mm;
     width: 210mm;
     min-height: 296mm;
     height: auto;
