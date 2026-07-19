@@ -365,6 +365,21 @@ body {
   box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.1);
 }
 
+.metadata-label.editable-field {
+  padding: 4px 10px;
+  border-right: 1px solid var(--border-color);
+  background-color: var(--light-grey);
+}
+
+.metadata-label.editable-field:hover {
+  background-color: var(--light-grey);
+  border-color: var(--primary-blue);
+}
+
+.metadata-label.editable-field:focus {
+  background-color: white;
+}
+
 .app-footer {
   margin-top: auto;
   padding: 16px 20px;
@@ -472,10 +487,13 @@ body {
   .main-header, .controls, .upload-section, .app-footer {
     display: none !important;
   }
-  .editable-field {
+  .editable-field:not(.metadata-label) {
     border: none !important;
     padding: 0 !important;
     background: transparent !important;
+    box-shadow: none !important;
+  }
+  .metadata-label.editable-field {
     box-shadow: none !important;
   }
   .app-container {

@@ -132,7 +132,8 @@ const App = () => {
       sampleId: findTextAfterLabel("Sample ID") || findTextAfterLabel("المرجع") || "N/A",
       location: findTextAfterLabel("Location / Site") || findTextAfterLabel("الموقع") || "N/A",
       contactPerson: findTextAfterLabel("Contact Person") || "Sir",
-      emailTel: findTextAfterLabel("E-MAIL / TEL") || "**",
+      emailTelLabel: "TESTED BY",
+      emailTel: findTextAfterLabel("E-MAIL / TEL") || "ASHIK KOYAMU",
       comment: "Based on the result, we would regard that the water sample meet the satisfactory Quality both chemically and microbiologically for domestic water and it is safe for drinking",
       headers: {
         s: "S",
@@ -334,9 +335,13 @@ const App = () => {
                 />
               </div>
               <div className="metadata-item">
-                <div className="metadata-label">E-MAIL / TEL</div>
-                <EditableValue 
-                  value={reportData.emailTel} 
+                <EditableValue
+                  value={reportData.emailTelLabel}
+                  onChange={(val) => handleEditMetadata('emailTelLabel', val)}
+                  className="metadata-label"
+                />
+                <EditableValue
+                  value={reportData.emailTel}
                   onChange={(val) => handleEditMetadata('emailTel', val)}
                   className="metadata-value"
                 />
