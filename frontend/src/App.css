@@ -90,6 +90,16 @@ body {
   letter-spacing: -0.025em;
 }
 
+.header-version {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: none;
+  -webkit-text-fill-color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #64748b);
+  vertical-align: super;
+  letter-spacing: 0;
+}
+
 .header-right {
   display: flex;
   align-items: center;

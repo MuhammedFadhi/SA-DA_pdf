@@ -281,7 +281,7 @@ const App = () => {
                 <button className="btn btn-primary" onClick={() => window.print()}>Print Report</button>
               </div>
             )}
-            <h1 className="header-title">PDF-Reporting Tool</h1>
+            <h1 className="header-title">PDF-Reporting Tool <span className="header-version">v2.1</span></h1>
           </div>
         </div>
       </header>
