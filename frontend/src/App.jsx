@@ -147,17 +147,26 @@ const App = () => {
       const sameRow = findTextAfterLabel("Comment");
       if (sameRow) return sameRow;
 
-      // New Gulf Star Lab template: "REMARKS & COMMENTS" heading with a paragraph below it,
-      // possibly on a different page than page 1.
+      // New Gulf Star Lab template: "REMARKS & COMMENTS" heading with a paragraph below it
+      // (sometimes wrapping onto multiple lines), possibly on a different page than page 1.
       for (const pageItems of pagesItems) {
         const heading = pageItems.find(i =>
           i.text.trim().toUpperCase().includes("REMARKS") && i.text.trim().toUpperCase().includes("COMMENTS")
         );
         if (!heading) continue;
-        const below = pageItems
+
+        const candidates = pageItems
           .filter(i => i.y < heading.y && i.text.trim().length > 0)
-          .sort((a, b) => b.y - a.y)[0];
-        if (below && (heading.y - below.y) < 30) return below.text.trim();
+          .sort((a, b) => b.y - a.y);
+
+        const lines = [];
+        let lastY = heading.y;
+        for (const item of candidates) {
+          if (lastY - item.y > 30) break; // gap too large: next section (e.g. "Lab Manager"), not a wrapped line
+          lines.push(item.text.trim());
+          lastY = item.y;
+        }
+        if (lines.length) return lines.join(" ");
       }
       return "";
     };
@@ -189,9 +198,12 @@ const App = () => {
       rows: []
     };
 
-    // Column x-ranges differ between the old DWT template and the new Gulf Star Lab template
+    // Column x-ranges differ between the old DWT template and the new Gulf Star Lab template.
+    // The Gulf Star Lab template itself has two variants seen in the wild: some copies include
+    // an "Analysis Type" column (pushing Parameter further right), some don't.
+    const hasAnalysisTypeColumn = items.some(i => i.text.trim() === "Analysis Type");
     const cols = isNewFormat
-      ? { sMin: 30, sMax: 46, paramMin: 140, paramMax: 270, methodMax: 386, resultMax: 446, unitMax: 506 }
+      ? { sMin: 30, sMax: 46, paramMin: hasAnalysisTypeColumn ? 140 : 46, paramMax: 270, methodMax: 386, resultMax: 446, unitMax: 506 }
       : { sMin: 50, sMax: 65, paramMin: 65, paramMax: 250, methodMax: 330, resultMax: 405, unitMax: 475 };
 
     // Table Extraction: results can span multiple PDF pages, each repeating its own header row
