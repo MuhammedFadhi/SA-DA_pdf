@@ -76,62 +76,106 @@ const App = () => {
 
     // "Gulf Star Lab" reports use plain English labels (Client Name, Location, Lab Job No...)
     // and lay results out at different x-positions than the older bilingual DWT-branded template.
-    const isNewFormat = items.some(i => i.text.trim().toLowerCase() === "client name");
+    // Some copies of this template render label words in a different font per word (e.g. "Client"
+    // at one font size, "Name" at another), which makes pdf.js emit them as separate text items
+    // instead of one merged item - so an exact single-item match for "client name" can miss it.
+    const allTextJoined = items.map(i => i.text).join("").toLowerCase().replace(/\s+/g, "");
+    const isNewFormat = items.some(i => i.text.trim().toLowerCase() === "client name") ||
+      allTextJoined.includes("clientname") ||
+      allTextJoined.includes("analysisresults");
 
-    // Some PDFs split RTL Arabic words into one isolated glyph per text item (in reversed
+    // Some PDFs split RTL Arabic words into isolated glyph runs per text item (in reversed
     // visual order), which reads as garbage once joined. Multi-character Arabic phrases
     // (stored as a single run) are legitimate and left alone.
     const isStrayArabicGlyph = (text) =>
-      text.trim().length <= 2 && /[؀-ۿﭐ-﷿ﹰ-﻾]/.test(text);
+      text.trim().length <= 5 && /[؀-ۿﭐ-﷿ﹰ-﻾]/.test(text);
+
+    // Groups items on the page into visual rows (by y-proximity), sorted left-to-right,
+    // so a label split across multiple text items can still be found and bounded correctly.
+    const buildLines = (its, yTolerance) => {
+      const sorted = [...its].sort((a, b) => b.y - a.y);
+      const lines = [];
+      sorted.forEach(item => {
+        let line = lines.find(l => Math.abs(l.y - item.y) < yTolerance);
+        if (!line) {
+          line = { y: item.y, items: [] };
+          lines.push(line);
+        }
+        line.items.push(item);
+      });
+      lines.forEach(l => l.items.sort((a, b) => a.x - b.x));
+      return lines;
+    };
+
+    const norm = (s) => s.toLowerCase().replace(/\s+/g, "");
 
     const findTextAfterLabel = (label, yTolerance = 5) => {
-      const labelItem = items.find(item => item.text && item.text.toLowerCase().includes(label.toLowerCase()));
-      if (!labelItem) return "";
+      const lines = buildLines(items, yTolerance);
+      const normLabel = norm(label);
 
-      // Look for the NEXT label on the same line to prevent leakage
-      const nextLabels = ["Sample ID", "Location", "Contact Person", "E-MAIL", "الموقع", "المرجع", "بريد"];
-      const nextLabelItem = items.find(item =>
-        Math.abs(item.y - labelItem.y) < yTolerance &&
-        item.x > labelItem.x + 20 &&
-        nextLabels.some(l => item.text && item.text.toLowerCase().includes(l.toLowerCase()))
-      );
+      // Labels that may appear right after our target label on the same row, used to
+      // bound where its value ends (prevents leaking into a neighboring column's text).
+      const nextLabels = ["Sample ID", "Location", "Contact Person", "E-MAIL", "Lab Job No",
+        "Sample Type", "Sample Date", "Report Date", "Client ID", "Client Name", "Test Reference",
+        "الموقع", "المرجع", "بريد"].map(norm).filter(Boolean);
 
-      const maxX = nextLabelItem ? nextLabelItem.x : labelItem.x + 300;
+      for (const line of lines) {
+        // Concatenate the row's (whitespace-stripped) text while remembering which
+        // item produced each character, so a label split across multiple items can
+        // still be located and its exact item-boundary recovered.
+        let text = "";
+        const charItemIdx = [];
+        line.items.forEach((item, idx) => {
+          const t = norm(item.text);
+          for (const ch of t) {
+            text += ch;
+            charItemIdx.push(idx);
+          }
+        });
 
-      const values = items.filter(item =>
-        Math.abs(item.y - labelItem.y) < yTolerance &&
-        item.x > labelItem.x &&
-        item.x < maxX &&
-        item.text.trim().length > 0 &&
-        !item.text.toLowerCase().includes(label.toLowerCase()) &&
-        !isStrayArabicGlyph(item.text)
-      ).sort((a, b) => a.x - b.x);
+        const pos = text.indexOf(normLabel);
+        if (pos === -1) continue;
+        const labelEndCharPos = pos + normLabel.length - 1;
+        const labelEndIdx = charItemIdx[labelEndCharPos];
 
-      let text = values.map(v => v.text).join(" ").trim();
+        let nextLabelCharPos = -1;
+        for (const nl of nextLabels) {
+          const p = text.indexOf(nl, labelEndCharPos + 1);
+          if (p !== -1 && (nextLabelCharPos === -1 || p < nextLabelCharPos)) nextLabelCharPos = p;
+        }
+        const nextLabelStartIdx = nextLabelCharPos === -1 ? undefined : charItemIdx[nextLabelCharPos];
 
-      // Aggressive cleanup of common bilingual label artifacts
-      const cleanup = [
-        ":", "/", "Company Name", "اسم الشركة", "Client Name",
-        "Sample Type", "نوع العينة",
-        "Sample ID", "المرجع",
-        "Sample Date", "تاريخ استلام العينة",
-        "Location / Site", "الموقع", "Location",
-        "Report Date", "تاريخ التقرير",
-        "Contact Person",
-        "E-MAIL / TEL", "بريد /هاتف", "هاتف",
-        "E-MAIL / Phone",
-        "Lab Job No",
-        "Comment", "ملاحظة", "مالحظة",
-        "Test Reference", "Client ID"
-      ];
-      cleanup.forEach(c => {
-        // Use regex for word boundaries if possible, or just replace
-        const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const re = new RegExp(escaped, 'gi');
-        text = text.replace(re, "").trim();
-      });
+        const values = line.items
+          .slice(labelEndIdx + 1, nextLabelStartIdx)
+          .filter(item => item.text.trim().length > 0 && !isStrayArabicGlyph(item.text));
 
-      return text.replace(/^[ /:-]+/, "").replace(/[ /:-]+$/, "").trim();
+        let valueText = values.map(v => v.text).join(" ").trim();
+
+        // Aggressive cleanup of common bilingual label artifacts
+        const cleanup = [
+          ":", "Company Name", "اسم الشركة", "Client Name",
+          "Sample Type", "نوع العينة",
+          "Sample ID", "المرجع",
+          "Sample Date", "تاريخ استلام العينة",
+          "Location / Site", "الموقع", "Location",
+          "Report Date", "تاريخ التقرير",
+          "Contact Person",
+          "E-MAIL / TEL", "بريد /هاتف", "هاتف",
+          "E-MAIL / Phone",
+          "Lab Job No",
+          "Comment", "ملاحظة", "مالحظة",
+          "Test Reference", "Client ID"
+        ];
+        cleanup.forEach(c => {
+          const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const re = new RegExp(escaped, 'gi');
+          valueText = valueText.replace(re, "").trim();
+        });
+
+        const finalText = valueText.replace(/^[ /:-]+/, "").replace(/[ /:-]+$/, "").trim();
+        if (finalText) return finalText;
+      }
+      return "";
     };
 
     const findJobNo = () => {
