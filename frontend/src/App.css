@@ -140,6 +140,12 @@ body {
   flex-direction: column;
 }
 
+/* Mirrors the print layout of .report-view so its natural height can be measured on screen. */
+.report-view.print-measure {
+  width: 910px;
+  min-height: 0;
+}
+
 .header-img {
   width: 100%;
   margin-bottom: 10px;
@@ -252,6 +258,66 @@ body {
   border: 1px solid var(--border-color);
   padding: 3px 6px;
   text-align: center;
+}
+
+.results-table th {
+  position: relative;
+}
+
+/* Small "−" in the corner of each column header; only shown while hovering the header. */
+.column-hide-btn {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #dc2626;
+  color: white;
+  font-size: 11px;
+  line-height: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 2;
+}
+
+.results-table th:hover .column-hide-btn,
+.column-hide-btn:focus-visible {
+  opacity: 1;
+}
+
+.hidden-columns-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.column-restore-btn {
+  padding: 2px 8px;
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+  background: white;
+  color: var(--primary-blue);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.column-restore-btn:hover {
+  border-color: var(--primary-blue);
+}
+
+.results-table .section-row td {
+  background-color: var(--light-grey);
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-align: left;
 }
 
 .param-name {
@@ -410,7 +476,9 @@ body {
   object-fit: contain;
 }
 
-@media (max-width: 768px) {
+/* screen-only: an A4 print page also counts as narrower than 768px, which would otherwise
+   apply this phone layout to the PDF. */
+@media screen and (max-width: 768px) {
   .header-inner {
     flex-direction: column;
     padding: 10px;
@@ -493,12 +561,13 @@ body {
     size: A4;
     margin: 0;
   }
-  .main-header, .controls, .upload-section, .app-footer {
+  .main-header, .controls, .upload-section, .app-footer,
+  .column-hide-btn, .hidden-columns-bar {
     display: none !important;
   }
+  /* Hide edit affordances but keep the on-screen padding/border box so print lays out like the preview. */
   .editable-field:not(.metadata-label) {
-    border: none !important;
-    padding: 0 !important;
+    border-color: transparent !important;
     background: transparent !important;
     box-shadow: none !important;
   }
@@ -510,13 +579,17 @@ body {
     margin: 0;
     padding: 0;
   }
+  /* Lay out at the same width as the on-screen preview, then zoom down to fit A4, so the PDF
+     matches the preview instead of re-wrapping into a narrower page. --print-zoom and
+     --print-height (exactly N A4 pages, in pre-zoom px) are set from JS before printing.
+     A fixed height (not min-height) keeps page-break gaps from growing the box. */
   .report-view {
     box-shadow: none;
     margin: 0;
-    padding: 5mm 15mm 5mm 15mm;
-    width: 210mm;
-    min-height: 296mm;
-    height: auto;
+    width: 910px;
+    zoom: var(--print-zoom, 0.8722);
+    height: var(--print-height, 1283px);
+    min-height: 0;
     max-height: none !important;
     overflow: visible;
   }
@@ -524,15 +597,23 @@ body {
     display: table !important;
     white-space: normal !important;
   }
+  /* Pinned to the bottom of the last page. In-flow (margin-top: auto) gets pushed onto an extra
+     page by the gaps the browser inserts when the table breaks across pages. */
   .footer-img {
-    margin-top: auto;
-    width: 100%;
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    width: calc(100% - 40px);
+    margin: 0;
     page-break-inside: avoid;
   }
   .signature-area {
     page-break-inside: avoid;
   }
-  .barcode {
+  /* Browsers drop background colors when printing by default (unless "Background graphics" is
+     ticked); force them so the grey label cells, table header and section rows match the preview. */
+  .report-view,
+  .report-view * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

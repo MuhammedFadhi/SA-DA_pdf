@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import './App.css';
 
@@ -8,10 +8,61 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+// Results table columns, in display order. `key` indexes both reportData.headers and each row.
+const COLUMNS = [
+  { key: 's', width: '30px' },
+  { key: 'parameter' },
+  { key: 'method', width: '100px' },
+  { key: 'result', width: '80px' },
+  { key: 'unit', width: '60px' },
+  { key: 'std', width: '100px' },
+];
+
 const App = () => {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
+  const reportRef = useRef(null);
+
+  // The footer sits at the bottom of .report-view, which is only one A4 page tall in print.
+  // When the results run onto further pages, stretch the report to a whole number of pages
+  // so the footer lands at the bottom of the last page instead of right after the content.
+  // Print lays the report out at the preview's width (REPORT_WIDTH_PX, matching .print-measure
+  // and the print .report-view rule) and zooms it down to A4 width, so the PDF matches the preview.
+  useEffect(() => {
+    const MM_TO_PX = 96 / 25.4;
+    const REPORT_WIDTH_PX = 910;
+    const ZOOM = (210 * MM_TO_PX) / REPORT_WIDTH_PX;
+    // One A4 page height in pre-zoom px.
+    const PAGE_HEIGHT_PX = (297 * MM_TO_PX) / ZOOM;
+    // Space lost at each page break: the table header repeats on the new page, and the row
+    // (or signature block) that doesn't fit is pushed down whole, leaving a gap.
+    const PAGE_BREAK_ALLOWANCE_PX = 100;
+
+    const fitToPages = () => {
+      const el = reportRef.current;
+      if (!el) return;
+      el.classList.add('print-measure');
+      const contentHeight = el.scrollHeight;
+      el.classList.remove('print-measure');
+      let pages = 1;
+      while (contentHeight + (pages - 1) * PAGE_BREAK_ALLOWANCE_PX > pages * PAGE_HEIGHT_PX) pages++;
+      el.style.setProperty('--print-zoom', ZOOM);
+      // A few px short of N pages so rounding can't spill a blank page.
+      el.style.setProperty('--print-height', `${pages * PAGE_HEIGHT_PX - 4}px`);
+    };
+    const reset = () => {
+      reportRef.current?.style.removeProperty('--print-zoom');
+      reportRef.current?.style.removeProperty('--print-height');
+    };
+
+    window.addEventListener('beforeprint', fitToPages);
+    window.addEventListener('afterprint', reset);
+    return () => {
+      window.removeEventListener('beforeprint', fitToPages);
+      window.removeEventListener('afterprint', reset);
+    };
+  }, []);
 
   const processFile = async (file) => {
     console.log("File selected:", file.name);
@@ -71,8 +122,106 @@ const App = () => {
     event.preventDefault();
   };
 
+  // "Al Hoty - Stanger" reports: "Label : value" metadata, a right-hand header box
+  // (TWO No. / Report No. / Report Date / Ref. No.), and a Test Name / Unit / Method / Results
+  // table grouped under uppercase section headings (PHYSICAL PROPERTIES, ANION, ...).
+  const extractAlHotyData = (pagesItems) => {
+    const items = pagesItems[0];
+
+    const valueOnRow = (label) => {
+      const labelItem = items.find(i => i.text.trim().toLowerCase() === label.toLowerCase());
+      if (!labelItem) return "";
+      return items
+        .filter(i => i !== labelItem && Math.abs(i.y - labelItem.y) < 3 && i.x > labelItem.x)
+        .sort((a, b) => a.x - b.x)
+        .map(i => i.text)
+        .join(" ")
+        .replace(/^[\s:]+/, "")
+        .trim();
+    };
+
+    const clientItem = items.find(i => /^CLIENT\s*:/i.test(i.text.trim()));
+    const locationItem = items.find(i => /Kingdom of Saudi Arabia/i.test(i.text));
+
+    const data = {
+      companyName: clientItem ? clientItem.text.replace(/^CLIENT\s*:/i, "").trim() : "Unknown Company",
+      sampleType: valueOnRow("Sample Name") || "Water Analysis",
+      sampleDate: valueOnRow("Sampled Date") || "N/A",
+      reportDate: valueOnRow("Report Date") || "N/A",
+      labJobNo: valueOnRow("Report No.") || valueOnRow("TWO No.") || "N/A",
+      sampleId: valueOnRow("Sample No.") || "N/A",
+      location: locationItem ? locationItem.text.split(",")[0].trim() : "N/A",
+      contactPerson: "Sir",
+      testReference: valueOnRow("Ref. No.") || "N/A",
+      clientId: valueOnRow("TWO No.") || "N/A",
+      emailPhone: "N/A",
+      emailTelLabel: "TESTED BY",
+      emailTel: "ASHIK KOYAMU",
+      comment: "Based on the result, we would regard that the water sample meet the satisfactory Quality both chemically and microbiologically for domestic water and it is safe for drinking",
+      headers: {
+        s: "S",
+        parameter: "Parameters / Testing اسم التحليل /الفحوصات",
+        method: "Method طريقة الاختبار",
+        result: "Result النتيجة",
+        unit: "Unit الوحدة",
+        std: "STD DRINKING WATER"
+      },
+      rows: []
+    };
+
+    let serial = 0;
+    pagesItems.forEach(pageItems => {
+      const header = pageItems.find(i => i.text.trim() === "Test Name");
+      if (!header) return;
+      const headerX = (label, fallback) =>
+        (pageItems.find(i => i.text.trim() === label && Math.abs(i.y - header.y) < 3) || { x: fallback }).x;
+      const unitX = headerX("Unit", 220) - 5;
+      const methodX = headerX("Method", 326) - 5;
+      // Results are right-aligned under their header, so they can start well left of it.
+      const resultX = methodX + (headerX("Results", 535) - methodX) * 0.6;
+
+      const body = pageItems.filter(i => i.y < header.y - 2 && i.y > 90 && i.text.trim());
+      // A method can wrap onto two lines straddling the row's baseline, hence the loose tolerance.
+      const sameRow = (a, b) => Math.abs(a.y - b.y) <= 7;
+      const cell = (anchor, min, max) => body
+        .filter(i => sameRow(i, anchor) && i.x >= min && i.x < max)
+        .sort((a, b) => b.y - a.y || a.x - b.x)
+        .map(i => i.text.trim())
+        .join(" ");
+
+      const leftItems = body.filter(i => i.x < unitX).sort((a, b) => b.y - a.y);
+      const dataAnchors = leftItems.filter(a => body.some(i => sameRow(i, a) && i.x >= resultX));
+      if (!dataAnchors.length) return;
+      const lastDataY = dataAnchors[dataAnchors.length - 1].y;
+
+      leftItems.forEach(anchor => {
+        if (dataAnchors.includes(anchor)) {
+          serial += 1;
+          data.rows.push({
+            s: String(serial),
+            parameter: anchor.text.trim(),
+            method: cell(anchor, methodX, resultX),
+            result: cell(anchor, resultX, Infinity),
+            unit: cell(anchor, unitX, methodX),
+            std: ""
+          });
+        } else if (anchor.y > lastDataY && anchor.text === anchor.text.toUpperCase()) {
+          // Section heading like "TRACE METALS"; skips the mixed-case "Analysis of Water" title
+          // and anything below the table (signatures).
+          data.rows.push({ section: true, s: "", parameter: anchor.text.trim(), method: "", result: "", unit: "", std: "" });
+        }
+      });
+    });
+
+    return data;
+  };
+
   const extractData = (pagesItems) => {
     const items = pagesItems[0];
+
+    if (items.some(i => /AL\s*HOTY/i.test(i.text))) {
+      return extractAlHotyData(pagesItems);
+    }
 
     // "Gulf Star Lab" reports use plain English labels (Client Name, Location, Lab Job No...)
     // and lay results out at different x-positions than the older bilingual DWT-branded template.
@@ -287,6 +436,20 @@ const App = () => {
     setReportData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Hidden columns live on reportData so "Upload New" starts with every column visible again.
+  const hiddenColumns = reportData?.hiddenColumns || [];
+  const visibleColumns = COLUMNS.filter(col => !hiddenColumns.includes(col.key));
+
+  const toggleColumn = (key) => {
+    setReportData(prev => {
+      const hidden = prev.hiddenColumns || [];
+      const next = hidden.includes(key) ? hidden.filter(k => k !== key) : [...hidden, key];
+      // Keep at least one column so the table never collapses to nothing.
+      if (next.length >= COLUMNS.length) return prev;
+      return { ...prev, hiddenColumns: next };
+    });
+  };
+
   const handleEditHeader = (field, value) => {
     setReportData(prev => ({ 
       ...prev, 
@@ -353,7 +516,7 @@ const App = () => {
       ) : (
         <div className="report-container">
 
-          <div className="report-view">
+          <div className="report-view" ref={reportRef}>
             <img src="/header.png" alt="Header" className="header-img" />
             
             <div className="report-title-bar">
@@ -484,86 +647,51 @@ const App = () => {
               </div>
             </div>
 
+            {hiddenColumns.length > 0 && (
+              <div className="hidden-columns-bar">
+                <span>Hidden columns:</span>
+                {COLUMNS.filter(col => hiddenColumns.includes(col.key)).map(col => (
+                  <button key={col.key} className="column-restore-btn" onClick={() => toggleColumn(col.key)} title="Show this column again">
+                    + {reportData.headers[col.key]}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <table className="results-table">
               <thead>
                 <tr>
-                  <th style={{ width: '30px' }}>
-                    <EditableValue 
-                      value={reportData.headers.s} 
-                      onChange={(val) => handleEditHeader('s', val)}
-                    />
-                  </th>
-                  <th>
-                    <EditableValue
-                      value={reportData.headers.parameter}
-                      onChange={(val) => handleEditHeader('parameter', val)}
-                    />
-                  </th>
-                  <th style={{ width: '100px' }}>
-                    <EditableValue 
-                      value={reportData.headers.method} 
-                      onChange={(val) => handleEditHeader('method', val)}
-                    />
-                  </th>
-                  <th style={{ width: '80px' }}>
-                    <EditableValue 
-                      value={reportData.headers.result} 
-                      onChange={(val) => handleEditHeader('result', val)}
-                    />
-                  </th>
-                  <th style={{ width: '60px' }}>
-                    <EditableValue 
-                      value={reportData.headers.unit} 
-                      onChange={(val) => handleEditHeader('unit', val)}
-                    />
-                  </th>
-                  <th style={{ width: '100px' }}>
-                    <EditableValue 
-                      value={reportData.headers.std} 
-                      onChange={(val) => handleEditHeader('std', val)}
-                    />
-                  </th>
+                  {visibleColumns.map(col => (
+                    <th key={col.key} style={col.width ? { width: col.width } : undefined}>
+                      <button className="column-hide-btn" onClick={() => toggleColumn(col.key)} title="Hide this column">−</button>
+                      <EditableValue
+                        value={reportData.headers[col.key]}
+                        onChange={(val) => handleEditHeader(col.key, val)}
+                      />
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {reportData.rows.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      <EditableValue 
-                        value={row.s} 
-                        onChange={(val) => handleEditRow(idx, 's', val)}
-                      />
-                    </td>
-                    <td className="param-name">
+                {reportData.rows.map((row, idx) => row.section ? (
+                  <tr key={idx} className="section-row">
+                    <td colSpan={visibleColumns.length}>
                       <EditableValue
                         value={row.parameter}
                         onChange={(val) => handleEditRow(idx, 'parameter', val)}
                       />
                     </td>
-                    <td>
-                      <EditableValue 
-                        value={row.method} 
-                        onChange={(val) => handleEditRow(idx, 'method', val)}
-                      />
-                    </td>
-                    <td>
-                      <EditableValue 
-                        value={row.result} 
-                        onChange={(val) => handleEditRow(idx, 'result', val)}
-                      />
-                    </td>
-                    <td>
-                      <EditableValue 
-                        value={row.unit} 
-                        onChange={(val) => handleEditRow(idx, 'unit', val)}
-                      />
-                    </td>
-                    <td>
-                      <EditableValue 
-                        value={row.std} 
-                        onChange={(val) => handleEditRow(idx, 'std', val)}
-                      />
-                    </td>
+                  </tr>
+                ) : (
+                  <tr key={idx}>
+                    {visibleColumns.map(col => (
+                      <td key={col.key} className={col.key === 'parameter' ? 'param-name' : undefined}>
+                        <EditableValue
+                          value={row[col.key]}
+                          onChange={(val) => handleEditRow(idx, col.key, val)}
+                        />
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
