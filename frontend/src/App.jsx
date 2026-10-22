@@ -179,8 +179,13 @@ const App = () => {
       const methodX = headerX("Method", 326) - 5;
       // Results are right-aligned under their header, so they can start well left of it.
       const resultX = methodX + (headerX("Results", 535) - methodX) * 0.6;
+      // Some copies add a "Limits (WHO)" column after Results; it maps to our STD column.
+      const limitsX = headerX("Limits", Infinity) - 3;
 
-      const body = pageItems.filter(i => i.y < header.y - 2 && i.y > 90 && i.text.trim());
+      // The table ends at the "Remarks:" paragraph when there is one (else at the page footer).
+      const remarks = pageItems.find(i => /^Remarks\s*:/i.test(i.text.trim()));
+      const tableBottom = remarks ? remarks.y + 2 : 90;
+      const body = pageItems.filter(i => i.y < header.y - 2 && i.y > tableBottom && i.text.trim());
       // A method can wrap onto two lines straddling the row's baseline, hence the loose tolerance.
       const sameRow = (a, b) => Math.abs(a.y - b.y) <= 7;
       const cell = (anchor, min, max) => body
@@ -201,9 +206,9 @@ const App = () => {
             s: String(serial),
             parameter: anchor.text.trim(),
             method: cell(anchor, methodX, resultX),
-            result: cell(anchor, resultX, Infinity),
+            result: cell(anchor, resultX, limitsX),
             unit: cell(anchor, unitX, methodX),
-            std: ""
+            std: cell(anchor, limitsX, Infinity)
           });
         } else if (anchor.y > lastDataY && anchor.text === anchor.text.toUpperCase()) {
           // Section heading like "TRACE METALS"; skips the mixed-case "Analysis of Water" title
@@ -211,6 +216,35 @@ const App = () => {
           data.rows.push({ section: true, s: "", parameter: anchor.text.trim(), method: "", result: "", unit: "", std: "" });
         }
       });
+    });
+
+    // The lab's own "Remarks:" paragraph(s) replace the generic comment. Stops at "Note:", which
+    // is a reporting-convention footnote, or at a large gap (the signature block).
+    pagesItems.forEach(pageItems => {
+      const remarks = pageItems.find(i => /^Remarks\s*:/i.test(i.text.trim()));
+      if (!remarks) return;
+      const lines = [];
+      pageItems
+        .filter(i => i.y <= remarks.y + 2 && i.text.trim())
+        .sort((a, b) => b.y - a.y || a.x - b.x)
+        .forEach(item => {
+          const line = lines[lines.length - 1];
+          if (line && Math.abs(line.y - item.y) < 3) line.parts.push(item.text.trim());
+          else lines.push({ y: item.y, parts: [item.text.trim()] });
+        });
+      const kept = [];
+      for (const line of lines) {
+        const text = line.parts.join(" ");
+        if (/^Note\s*:/i.test(text)) break;
+        if (kept.length && kept[kept.length - 1].y - line.y > 30) break;
+        kept.push({ y: line.y, text });
+      }
+      const comment = kept.map(l => l.text).join(" ")
+        .replace(/^Remarks\s*:\s*/i, "")
+        .replace(/\s+/g, " ")
+        .replace(/(\w)- (\w)/g, "$1-$2") // re-join words hyphenated across a line wrap ("Drinking- water")
+        .trim();
+      if (comment) data.comment = comment;
     });
 
     return data;
